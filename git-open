@@ -155,6 +155,7 @@ protocol=$(getConfig "protocol")
 
 # Get current branch / tag / commit
 branch=${2:-$(git symbolic-ref -q --short HEAD || git describe --tags --exact-match 2>/dev/null || git rev-parse HEAD)}
+object=$3
 
 # Split arguments on '/'
 IFS='/' read -r -a pathargs <<<"$urlpath"
@@ -167,6 +168,9 @@ else
   #   github.com/paulirish/git-open/pull/24
   branch=${branch//%/%25} branch=${branch//#/%23}
   providerBranchRef="/tree/$branch"
+  if [[ -n "$object" ]]; then
+    providerObjectRef="/blob/$branch/$object"
+  fi
 fi
 
 if [[ "$domain" == 'bitbucket.org' ]]; then
@@ -225,6 +229,10 @@ openurl="$protocol://$domain/$urlpath"
 # simplify URL for master
 if [[ $branch != "master" ]]; then
     openurl="$openurl$providerBranchRef"
+fi
+
+if [[ -n "$providerObjectRef" ]]; then
+  openurl="$openurl$providerObjectRef"
 fi
 
 # get current open browser command
